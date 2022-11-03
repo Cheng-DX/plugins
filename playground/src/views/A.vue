@@ -1,9 +1,9 @@
 <script setup lang="ts">
-
+const a = defu({}, {})
 </script>
 
 <template>
-  vuet
+  a
 </template>
 
 <style scoped>
