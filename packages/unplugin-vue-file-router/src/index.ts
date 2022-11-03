@@ -1,6 +1,6 @@
 import fs from 'fs'
 import { resolve } from 'path'
-import { resolveArray } from '@chengdx/shared'
+import { formatNaming, resolveArray } from '@chengdx/shared'
 import { createUnplugin } from 'unplugin'
 import type { Options } from './types'
 
@@ -13,32 +13,43 @@ export default createUnplugin<Options | undefined>((options) => {
   if (pageDir.startsWith('/'))
     pageDir = pageDir.slice(1)
 
-  function resolveDir(root: string, path: string): string {
-    const resolvedPath = resolve(root, path)
-    const pathes = fs.readdirSync(resolvedPath)
-    return pathes.map((path) => {
-      const resolved = resolve(resolvedPath, path)
-      if (fs.statSync(resolved).isDirectory())
-        return resolveDir(resolvedPath, path)
-      else if (fs.statSync(resolved).isFile())
-        return resolveFile(resolvedPath, path)
+  function resolveDir(absPath: string, stackRoutePath: string): string {
+    const subItems = fs.readdirSync(absPath)
+    const subRoutes = subItems.map((item) => {
+      const absSubPath = resolve(absPath, item)
+      const stat = fs.statSync(absSubPath)
+      if (stat.isDirectory())
+        return resolveDir(absSubPath, `${stackRoutePath}/${item}`)
+      else if (stat.isFile())
+        return resolveFile(absSubPath, stackRoutePath)
       else
-        return ['']
-    }).join('\n')
+        return ''
+    }).join('\n,')
+
+    return `{
+      name: '${formatNaming(stackRoutePath, 'kebab').result}',
+      path: '${(stackRoutePath.startsWith('/') ? stackRoutePath : `/${stackRoutePath}`)}',
+      component: () => import('${resolve(absPath, 'index.vue')}'),
+      children: [${subRoutes}]
+    }`
   }
 
-  function resolveFile(root: string, path: string) {
-    let name = path
+  function resolveFile(absPath: string, stackRoutePath: string) {
+    let fileName = absPath.split('/').pop() ?? 'index'
     resolveArray(extensions).forEach((extension) => {
-      name = name.replace(extension, '')
+      fileName = fileName.replace(extension, '')
     })
-    const rootName = !root.includes(`src/${pageDir}`) ? '' : root.split(`src/${pageDir}/`)[1]
-    const routePath = name === 'index' ? rootName : `${rootName}/${name}`
+    if (fileName === 'index')
+      return ''
+    fileName = formatNaming(fileName, 'kebab').result
+    const routePath = fileName === 'index'
+      ? (stackRoutePath.startsWith('/') ? stackRoutePath : `/${stackRoutePath}`)
+      : `${stackRoutePath}/${fileName}`
     const r = `{
-  name: '${name}',
-  path: '${routePath.startsWith('/') ? routePath : `/${routePath}`}',
-  component: () => import('${resolve(root, path)}'),
-},`
+  name: '${routePath}',
+  path: '${routePath}',
+  component: () => import('${absPath}'),
+}`
     return r
   }
 
@@ -50,7 +61,7 @@ export default createUnplugin<Options | undefined>((options) => {
     },
     load(id) {
       if (id === resolvedVirtualModuleId) {
-        const routeObjects = resolveDir('src', pageDir)
+        const routeObjects = resolveDir(resolve('src', pageDir), '')
         return `export const routes = [${routeObjects}]`
       }
     },
