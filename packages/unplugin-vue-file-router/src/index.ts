@@ -8,10 +8,17 @@ export default createUnplugin<Options | undefined>((options) => {
   const virtualModuleId = 'virtual:file-router'
   const resolvedVirtualModuleId = `\0${virtualModuleId}`
 
-  // eslint-disable-next-line prefer-const
-  let { pageDir = 'views', extensions = /.(vue|[t|j]sx*)$/ } = options || {}
-  if (pageDir.startsWith('/'))
-    pageDir = pageDir.slice(1)
+  const {
+    pageDir = 'views', extensions = /.(vue|[t|j]sx*)$/, matchRoute = {
+      rule: (filename: string) => filename.startsWith('[') && filename.endsWith(']'),
+      resolver: (filename: string) => {
+        const content = filename.slice(1, -1)
+        return {
+          path: `:${content}`,
+        }
+      },
+    },
+  } = options || {}
 
   function resolveDir(absPath: string, stackRoutePath: string): string {
     const subItems = fs.readdirSync(absPath)
@@ -24,33 +31,31 @@ export default createUnplugin<Options | undefined>((options) => {
         return resolveFile(absSubPath, stackRoutePath)
       else
         return ''
-    }).join('\n,')
+    }).filter(s => s).join('\n,')
 
-    return `{
-      name: '${formatNaming(stackRoutePath, 'kebab').result}',
-      path: '${(stackRoutePath.startsWith('/') ? stackRoutePath : `/${stackRoutePath}`)}',
-      component: () => import('${resolve(absPath, 'index.vue')}'),
-      children: [${subRoutes}]
-    }`
+    return `{name: '${formatNaming(stackRoutePath, 'kebab').result}',path: '${(stackRoutePath.startsWith('/') ? stackRoutePath : `/${stackRoutePath}`)}',component: () => import('${resolve(absPath, 'index.vue')}'),children: [${subRoutes}]}`
   }
 
   function resolveFile(absPath: string, stackRoutePath: string) {
-    let fileName = absPath.split('/').pop() ?? 'index'
+    let filename = absPath.split('/').pop() ?? 'index'
     resolveArray(extensions).forEach((extension) => {
-      fileName = fileName.replace(extension, '')
+      filename = filename.replace(extension, '')
     })
-    if (fileName === 'index')
+    if (filename === 'index')
       return ''
-    fileName = formatNaming(fileName, 'kebab').result
-    const routePath = fileName === 'index'
-      ? (stackRoutePath.startsWith('/') ? stackRoutePath : `/${stackRoutePath}`)
-      : `${stackRoutePath}/${fileName}`
-    const r = `{
-  name: '${routePath}',
-  path: '${routePath}',
-  component: () => import('${absPath}'),
-}`
-    return r
+    filename = formatNaming(filename, 'kebab').result
+
+    // match route
+    for (const { rule, resolver } of resolveArray(matchRoute)) {
+      if (rule(filename)) {
+        const { path } = resolver(filename)
+        const routePath = `${stackRoutePath}/${path}`
+        return `{name: '${routePath}', path: '${routePath}', component: () => import('${absPath}')}`
+      }
+    }
+    // normal
+    const routePath = `${stackRoutePath}/${filename}`
+    return `{name: '${routePath}', path: '${routePath}', component: () => import('${absPath}')}`
   }
 
   return {
