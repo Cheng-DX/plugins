@@ -2,17 +2,7 @@ import type { MaybeArray } from '@chengdx/shared'
 
 export interface MatchRouteHandler {
   rule: (filename: string) => boolean
-  resolver: (filename: string) => ({
-    /**
-     * Add into route params
-     */
-    params: unknown
-    /**
-     * Parsed path, include realtive path only
-     * like filename '[id]' into ':id'
-     */
-    path: string
-  })
+  resolver: (filename: string) => string
 }
 
 export interface Options {

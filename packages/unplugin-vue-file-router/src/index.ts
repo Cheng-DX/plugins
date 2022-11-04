@@ -9,15 +9,10 @@ export default createUnplugin<Options | undefined>((options) => {
   const resolvedVirtualModuleId = `\0${virtualModuleId}`
 
   const {
-    pageDir = 'views', extensions = /.(vue|[t|j]sx*)$/, matchRoute = {
+    pageDir = 'views', extensions = /.(vue|[t|j]sx*)$/, matchRoute = [{
       rule: (filename: string) => filename.startsWith('[') && filename.endsWith(']'),
-      resolver: (filename: string) => {
-        const content = filename.slice(1, -1)
-        return {
-          path: `:${content}`,
-        }
-      },
-    },
+      resolver: (filename: string) => `:${filename.slice(1, -1)}`,
+    }],
   } = options || {}
 
   function resolveDir(absPath: string, stackRoutePath: string): string {
@@ -48,8 +43,7 @@ export default createUnplugin<Options | undefined>((options) => {
     // match route
     for (const { rule, resolver } of resolveArray(matchRoute)) {
       if (rule(filename)) {
-        const { path } = resolver(filename)
-        const routePath = `${stackRoutePath}/${path}`
+        const routePath = `${stackRoutePath}/${resolver(filename)}`
         return `{name: '${routePath}', path: '${routePath}', component: () => import('${absPath}')}`
       }
     }
