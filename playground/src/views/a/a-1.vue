@@ -1,9 +1,9 @@
 <script setup lang="ts">
-const a = defu({}, {})
+
 </script>
 
 <template>
-  a
+  a-1
 </template>
 
 <style scoped>

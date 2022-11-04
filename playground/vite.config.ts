@@ -6,6 +6,7 @@ import Inspect from 'vite-plugin-inspect'
 import Router from 'unplugin-vue-file-router/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import { defaultExportResolver } from '@chengdx/default-export-resolver'
+import AutoImportVueComponents from 'unplugin-vue-components/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -19,6 +20,21 @@ export default defineConfig({
         defaultExportResolver([
           { name: 'defu', from: 'defu' },
         ]),
+      ],
+      imports: [
+        {
+          'vue-router': [
+            'RouterView',
+            'RouterLink',
+          ],
+        },
+      ],
+    }),
+    AutoImportVueComponents({
+      dts: true,
+      include: [
+        /\.[tj]sx?$/,
+        /\.vue\??/,
       ],
     }),
   ],
