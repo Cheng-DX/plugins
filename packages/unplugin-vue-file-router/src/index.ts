@@ -9,7 +9,9 @@ export default createUnplugin<Options | undefined>((options) => {
   const resolvedVirtualModuleId = `\0${virtualModuleId}`
 
   const {
-    pageDir = 'views', extensions = /.(vue|[t|j]sx*)$/, matchRoute = [{
+    pageDir = 'views',
+    extensions = /.(vue|[t|j]sx*)$/,
+    matchRoute = [{
       rule: (filename: string) => filename.startsWith('[') && filename.endsWith(']'),
       resolver: (filename: string) => `:${filename.slice(1, -1)}`,
     }],
