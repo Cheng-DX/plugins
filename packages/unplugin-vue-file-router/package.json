@@ -1,7 +1,7 @@
 {
   "name": "unplugin-vue-file-router",
   "type": "module",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "packageManager": "pnpm@7.13.5",
   "description": "File based router for vue-router",
   "license": "MIT",

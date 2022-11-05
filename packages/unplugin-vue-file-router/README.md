@@ -1,7 +1,21 @@
 ## File based router
 Generate routes from a directory of Vue files.
 
-### Useage
+### Usage
+This plugin based on [unplugin](https://github.com/unjs/unplugin) </br>
+So you can use it with Vite, Rollup, Webpack, esbuild, nuxt </br>
+Like in Vite
+```ts
+import { defineConfig } from 'vite'
+import Router from 'unplugin-vue-file-router/vite'
+
+export default defineConfig({
+  plugins: [
+    Router({ /* options */ })
+  ]
+})
+```
+### Rules
 Assuming you have a directory structure like this:
 ```
 src/views/
