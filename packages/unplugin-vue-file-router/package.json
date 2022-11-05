@@ -1,9 +1,9 @@
 {
   "name": "unplugin-vue-file-router",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "packageManager": "pnpm@7.13.5",
-  "description": "",
+  "description": "File based router for vue-router",
   "license": "MIT",
   "homepage": "https://github.com/Cheng-DX/plugins/tree/main/packages/unplugin-vue-file-router#readme",
   "repository": {
